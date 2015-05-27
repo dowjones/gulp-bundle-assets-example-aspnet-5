@@ -160,6 +160,7 @@ ClientBin/
 *.publishsettings
 node_modules/
 bower_components/
+.vs/
 
 # RIA/Silverlight projects
 Generated_Code/
@@ -188,3 +189,7 @@ FakesAssemblies/
 GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
+
+# frontend assets
+wwwroot/
+bundle.result.json

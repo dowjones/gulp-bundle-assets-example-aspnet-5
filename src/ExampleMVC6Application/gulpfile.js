@@ -1,32 +1,47 @@
 ﻿/// <binding Clean='clean' />
 
-var gulp = require("gulp"),
-  rimraf = require("rimraf"),
-  fs = require("fs");
+var gulp = require('gulp-help')(require('gulp')),
+  gbundle = require('gulp-bundle-assets'),
+  gutil = require('gulp-util'),
+  del = require('del'),
+  project = require('./project.json');
 
-eval("var project = " + fs.readFileSync("./project.json"));
-
-var paths = {
-  bower: "./bower_components/",
-  lib: "./" + project.webroot + "/lib/"
-};
-
-gulp.task("clean", function (cb) {
-  rimraf(paths.lib, cb);
+gulp.task('clean', 'Clean all assets out of /webroot', function (cb) {
+    del([project.webroot + '/*'], cb);
 });
 
-gulp.task("copy", ["clean"], function () {
-  var bower = {
-    "bootstrap": "bootstrap/dist/**/*.{js,map,css,ttf,svg,woff,eot}",
-    "bootstrap-touch-carousel": "bootstrap-touch-carousel/dist/**/*.{js,css}",
-    "hammer.js": "hammer.js/hammer*.{js,map}",
-    "jquery": "jquery/jquery*.{js,map}",
-    "jquery-validation": "jquery-validation/jquery.validate.js",
-    "jquery-validation-unobtrusive": "jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"
-  }
+gulp.task('watch', 'Watch assets and build on change', function (cb) {
+    var livereload = require('gulp-livereload');
+    livereload.listen();
+    gbundle.watch({
+        configPath: path.join(__dirname, 'bundle.config.js'),
+        results: {
+            dest: __dirname
+        },
+        dest: path.join(__dirname, project.webroot)
+    });
+    gulp.watch(project.webroot + '/**/*.*').on('change', function (file) {
+        livereload(file);
+        var d = new Date();
+        console.log(gutil.colors.bgBlue('browser livereload at ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds()));
+    });
+    cb();
+});
 
-  for (var destinationDir in bower) {
-    gulp.src(paths.bower + bower[destinationDir])
-      .pipe(gulp.dest(paths.lib + destinationDir));
-  }
+
+function bundle() {
+    return gulp.src('./bundle.config.js')
+      .pipe(gbundle())
+      .pipe(gbundle.results({
+          dest: './'
+      }))
+      .pipe(gulp.dest(project.webroot));
+}
+
+gulp.task('bundle', 'Builds all static files', function () {
+    return bundle();
+});
+
+gulp.task('build', 'Cleans and builds all static files', ['clean'], function () {
+    return bundle();
 });
